@@ -1,0 +1,31 @@
+kumuluzee:
+  datasources:
+  - jndi-name: jdbc/billing
+    connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
+    username: admin
+    password: PCIRAJXAPHBBGGBM
+  max-pool-size: 20
+  health:
+    servlet:
+      mapping: /healthz
+      enabled: true
+    logs:
+      enabled: true
+      level: FINE
+      period-s: 60
+    checks:
+      data-source-health-check:
+        jndi-name: jdbc/billing
+        connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
+        username: admin
+        password: PCIRAJXAPHBBGGBM
+  metrics:
+    servlet:
+      enabled: true
+      mapping: /metrics
+    logs:
+      period-s: 60
+      level: INFO
+  jwt-auth:
+    public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnOTgnGBISzm3pKuG8QXMVm6eEuTZx8Wqc8D9gy7vArzyE5QC/bVJNFwlz...
+    issuer: http://example.org/auth
