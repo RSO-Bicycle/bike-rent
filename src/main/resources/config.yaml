@@ -1,6 +1,6 @@
 kumuluzee:
   datasources:
-  - jndi-name: jdbc/billing
+  - jndi-name: jdbc/bike-rent
     connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
     username: admin
     password: PCIRAJXAPHBBGGBM
@@ -15,7 +15,7 @@ kumuluzee:
       period-s: 60
     checks:
       data-source-health-check:
-        jndi-name: jdbc/billing
+        jndi-name: jdbc/bike-rent
         connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
         username: admin
         password: PCIRAJXAPHBBGGBM

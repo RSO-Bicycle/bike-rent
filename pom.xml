@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>si.rso.bicycle</groupId>
-    <artifactId>billing</artifactId>
+    <artifactId>bike-rent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Bicycle</name>
-    <description>Billing microservice</description>
+    <description>Bike rent microservice</description>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
