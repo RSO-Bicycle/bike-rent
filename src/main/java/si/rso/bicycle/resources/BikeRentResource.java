@@ -10,6 +10,10 @@ import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Date;
@@ -49,18 +53,31 @@ public class BikeRentResource {
         //create new bike rent entry
         try{
 
-            this.em.getTransaction().begin();
+            //TODO: Write to the database
+            //TODO: Send API request to Billing service!
 
-            BikeRentEntity be = new BikeRentEntity();
-            be.setUser_id(request.user_id);
-            be.setBike_id(request.bike_id);
-            be.setStart_station(request.start_station);
-            be.setStart_time(request.start_time);
+            //POST call to billing service
+            Client client = ClientBuilder.newClient();
+            WebTarget resource = client.target("http://localhost:8080").path("billing/start")
+                    .queryParam("user_id", 1)
+                    .queryParam("borrow_id", 5)
+                    .queryParam("start_time", 5)
+                    .queryParam("start_station_id", 1)
+                    .queryParam("rate", 1.2)
+                    .queryParam("vat", 0.22)
+                    .queryParam("currency", "EUR");
+            Invocation.Builder billingRequest = resource.request();
+            billingRequest.accept(MediaType.APPLICATION_JSON);
 
-            this.em.persist(be);
-            this.em.getTransaction().commit();
-            this.em.refresh(be);
-            return Response.status(Response.Status.CREATED).build();
+            Response billingResponse = billingRequest.get();
+
+            if (billingResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                System.out.println("Success! " + billingResponse.getStatus());
+                System.out.println(billingResponse.getEntity());
+            } else {
+                System.out.println("ERROR! " + billingResponse.getStatus());
+                System.out.println(billingResponse.getEntity());
+            }
 
 
         }catch (Exception e){
@@ -74,10 +91,9 @@ public class BikeRentResource {
     public Response stopRent(@Valid StopRent request) {
         //create new bike rent entry
         try{
-            //TypedQuery<ProfileEntity> pe = this.em.createQuery("SELECT p FROM ProfileEntity p WHERE p.user_uuid = :user ORDER BY p.created_at DESC LIMIT 1", ProfileEntity.class);
-            //TypedQuery<BikeRent> be = this.em.createQuery("SELECT b FROM BikeRentResource b WHERE b.user_id = :user LIMIT 1", BikeRent.class);
-            // TODO: Get end_time & end_station_id from request
-            // TODO: Calculate total, with_vat & write everything to DB
+
+            //TODO: Update the database
+            //TODO: Send API request to Billing service!
 
 
         }catch (Exception e){
