@@ -24,7 +24,9 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /bike-rent
+        prefix: /bike-rent/
+    rewrite:
+      uri: /
     route:
     - destination:
         port:
@@ -56,22 +58,22 @@ spec:
           httpGet:
             path: /healthz
             port: 8080
-          initialDelaySeconds: 20
+          initialDelaySeconds: 60
           periodSeconds: 3
         env:
         - name: PORT
           value: "8080"
         - name: KUMULUZEE_DATASOURCES0_JNDINAME
-          value: "jdbc/billing"
+          value: "jdbc/bike-rent"
         - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
           valueFrom:
             secretKeyRef:
-              name: ibm-billing-db
+              name: ibm-billing-db-rent
               key: conn
         - name: KUMULUZEE_DATASOURCES0_USERNAME
           value: "admin"
         - name: KUMULUZEE_DATASOURCES0_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: ibm-billing-db
+              name: ibm-billing-db-rent
               key: password
