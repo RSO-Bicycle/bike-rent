@@ -1,7 +1,7 @@
 kumuluzee:
   datasources:
   - jndi-name: jdbc/bike-rent
-    connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
+    connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/bike-rent
     username: admin
     password: PCIRAJXAPHBBGGBM
   max-pool-size: 20
@@ -16,7 +16,7 @@ kumuluzee:
     checks:
       data-source-health-check:
         jndi-name: jdbc/bike-rent
-        connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/compose
+        connection-url: jdbc:mysql://sl-eu-gb-p00.dblayer.com:16998/bike-rent
         username: admin
         password: PCIRAJXAPHBBGGBM
   metrics:

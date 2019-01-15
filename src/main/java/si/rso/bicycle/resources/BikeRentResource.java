@@ -1,7 +1,11 @@
 package si.rso.bicycle.resources;
 
 import com.kumuluz.ee.streaming.common.annotations.StreamProducer;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
 import org.apache.kafka.clients.producer.Producer;
+import org.json.JSONObject;
 import si.rso.bicycle.entity.BikeRentEntity;
 
 import javax.enterprise.context.RequestScoped;
@@ -10,10 +14,6 @@ import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Date;
@@ -42,42 +42,40 @@ public class BikeRentResource {
 
     @GET
     @Path("/test")
-    public Response testRent(@Valid AllValid request){
+    public Response testRent(){
         return Response.status(77).build();
     }
 
 
     @POST
-    @Path("/rent/start")
+    @Path("/start")
     public Response startRent(@Valid StartRent request) {
         //create new bike rent entry
         try{
+            this.em.getTransaction().begin();
 
-            //TODO: Write to the database
-            //TODO: Send API request to Billing service!
+            BikeRentEntity br = new BikeRentEntity();
+            br.setUser_id(request.user_id);
+            br.setBike_id(request.bike_id);
+            br.setStart_station(request.start_station);
+            br.setStart_time(new Date());
 
-            //POST call to billing service
-            Client client = ClientBuilder.newClient();
-            WebTarget resource = client.target("http://localhost:8080").path("billing/start")
-                    .queryParam("user_id", 1)
-                    .queryParam("borrow_id", 5)
-                    .queryParam("start_time", 5)
-                    .queryParam("start_station_id", 1)
-                    .queryParam("rate", 1.2)
-                    .queryParam("vat", 0.22)
-                    .queryParam("currency", "EUR");
-            Invocation.Builder billingRequest = resource.request();
-            billingRequest.accept(MediaType.APPLICATION_JSON);
 
-            Response billingResponse = billingRequest.get();
+            this.em.persist(br);
+            this.em.getTransaction().commit();
+            this.em.refresh(br);
 
-            if (billingResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                System.out.println("Success! " + billingResponse.getStatus());
-                System.out.println(billingResponse.getEntity());
-            } else {
-                System.out.println("ERROR! " + billingResponse.getStatus());
-                System.out.println(billingResponse.getEntity());
-            }
+            String jsonString = new JSONObject()
+                    .put("user_id", br.getUser_id())
+                    .put("borrow_id", br.getId())
+                    .put("start_station_id", br.getStart_station())
+                    .toString();
+
+            HttpResponse<JsonNode> response = Unirest.post("https://http://billing.bicycle/start")
+                    .body(jsonString)
+                    .asJson();
+
+            return Response.status(Response.Status.CREATED).build();
 
 
         }catch (Exception e){
@@ -87,14 +85,35 @@ public class BikeRentResource {
     }
 
     @POST
-    @Path("/rent/stop")
+    @Path("/stop")
     public Response stopRent(@Valid StopRent request) {
         //create new bike rent entry
         try{
 
-            //TODO: Update the database
-            //TODO: Send API request to Billing service!
+            //Update the database
+            TypedQuery<BikeRentEntity> tq = this.em.createQuery("SELECT b FROM BikeRentEntity b WHERE b.id = :id", BikeRentEntity.class);
+            tq.setParameter("id", request.id);
 
+            BikeRentEntity br = tq.getSingleResult();
+
+            br.setEnd_time(new Date());
+            br.setEnd_station(request.end_station);
+
+            this.em.persist(br);
+            this.em.getTransaction().commit();
+            this.em.refresh(br);
+
+            //Send API request to Billing service!
+            String jsonString = new JSONObject()
+                    .put("borrow_id", br.getId())
+                    .put("stop_station_id", request.end_station)
+                    .toString();
+
+            HttpResponse<JsonNode> response = Unirest.post("https://http://billing.bicycle/stop")
+                    .body(jsonString)
+                    .asJson();
+
+            return Response.status(Response.Status.CREATED).build();
 
         }catch (Exception e){
             e.printStackTrace();
@@ -115,17 +134,11 @@ class StartRent {
     @NotNull(message = "start_station cannot be omitted")
     public Integer start_station;
 
-    @NotNull(message = "start_time cannot be omitted")
-    public Date start_time;
-
 }
 
 class StopRent {
     @NotNull(message = "id cannot be omitted")
     public Integer id;
-
-    @NotNull(message = "stop_time cannot be omitted")
-    public Date  stop_time;
 
     @NotNull(message = "end_station cannot be omitted")
     public Integer end_station;
