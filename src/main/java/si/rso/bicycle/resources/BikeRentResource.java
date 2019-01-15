@@ -4,6 +4,7 @@ import com.kumuluz.ee.streaming.common.annotations.StreamProducer;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.kafka.clients.producer.Producer;
 import org.json.JSONObject;
 import si.rso.bicycle.entity.BikeRentEntity;
@@ -42,7 +43,7 @@ public class BikeRentResource {
 
     @GET
     @Path("/test")
-    public Response testRent(){
+    public Response testRent() {
         return Response.status(77).build();
     }
 
@@ -51,7 +52,7 @@ public class BikeRentResource {
     @Path("/start")
     public Response startRent(@Valid StartRent request) {
         //create new bike rent entry
-        try{
+        try {
             this.em.getTransaction().begin();
 
             BikeRentEntity br = new BikeRentEntity();
@@ -71,14 +72,17 @@ public class BikeRentResource {
                     .put("start_station_id", br.getStart_station())
                     .toString();
 
-            HttpResponse<JsonNode> response = Unirest.post("https://http://billing.bicycle/start")
+            HttpResponse response = Unirest.post("http://billing.bicycle/v1/billing/start")
+                    .header("Content-Type", "application/json")
                     .body(jsonString)
-                    .asJson();
+                    .asString(); //.asJson();
+            System.out.println(response.getBody());
+
 
             return Response.status(Response.Status.CREATED).build();
 
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -88,7 +92,7 @@ public class BikeRentResource {
     @Path("/stop")
     public Response stopRent(@Valid StopRent request) {
         //create new bike rent entry
-        try{
+        try {
 
             //Update the database
             TypedQuery<BikeRentEntity> tq = this.em.createQuery("SELECT b FROM BikeRentEntity b WHERE b.id = :id", BikeRentEntity.class);
@@ -109,13 +113,14 @@ public class BikeRentResource {
                     .put("stop_station_id", request.end_station)
                     .toString();
 
-            HttpResponse<JsonNode> response = Unirest.post("https://http://billing.bicycle/stop")
+            Unirest.post("http://billing.bicycle/v1/billing/stop")
+                    .header("Content-Type", "application/json")
                     .body(jsonString)
                     .asJson();
 
             return Response.status(Response.Status.CREATED).build();
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
